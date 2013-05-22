@@ -20,6 +20,7 @@ describe DownloadsController do
       @obj = ModsAsset.new
       @obj.label = "world.png"
       @obj.add_file_datastream('fizz', :dsid=>'buzz', :mimeType => 'image/png')
+      @obj.add_file_datastream('whip', :dsid=>'whip', :mimeType => 'audio/mp3')
       @obj.add_file_datastream('foobarfoobarfoobar', :dsid=>'content', :mimeType => 'image/png')
       @obj.add_file_datastream("It's a stream", :dsid=>'descMetadata', :mimeType => 'text/plain')
       @obj.read_users = [@user.user_key]
@@ -70,6 +71,30 @@ describe DownloadsController do
           response.headers['Content-Type'].should == "image/png"
           response.headers["Content-Disposition"].should == "inline; filename=\"my%20dog.png\""
           response.body.should == 'foobarfoobarfoobar'
+        end
+        it "should default to return the correct mime type for an mp3" do
+          ModsAsset.stub(:default_content_ds).and_return('whip')
+          get "show", :id => @obj.pid
+          response.should be_success
+          response.headers['Content-Type'].should == "audio/mp3"
+          response.headers["Content-Disposition"].should == "inline; filename=\"world.png\""
+          response.body.should == 'whip'
+        end
+        it "should return the correct mime type for mp3 content" do
+          DownloadsController.default_content_dsid.should == "content"
+          f = ModsAsset.new
+          f.read_users = [@user.user_key]
+	  f.apply_depositor_metadata('archivist1@example.com')
+          f.label='horse mp3'
+          f.add_file_datastream(File.new(File.expand_path("../../fixtures", __FILE__) + '/horse.mp3'), :dsid=>'content', :mimeType => 'audio/mp3')
+          f.save!
+          file = File.open(File.expand_path("../../fixtures", __FILE__) + '/horse.mp3', "rb")
+          expected_content = file.read
+          controller.should_receive(:send_file_headers!).with({ :disposition => 'inline',  :type => 'audio/mp3', :filename => 'horse mp3' })
+          get "show", :id => f.pid
+          response.body.should == expected_content
+          response.header["Content-Type"].should == "audio/mp3"
+          response.should be_success
         end
       end
     end
