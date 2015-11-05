@@ -1,3 +1,5 @@
 gem 'rspec-rails', '~> 3.1', group: :test
 gem 'rspec-its'
 gem 'byebug' unless ENV['CI']
+
+gem 'blacklight', github: 'projectblacklight/blacklight', branch: 'autoload_not_needed'

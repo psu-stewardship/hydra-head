@@ -27,8 +27,8 @@ describe CatalogController do
       expect(get: "/catalog/test:3").to route_to(controller: 'catalog', action: 'show', id: 'test:3')
     end
 
-    it "should map catalog_path" do
-      expect(catalog_path("test:3")).to eq '/catalog/test:3'
+    it "maps solr_document_path" do
+      expect(solr_document_path("test:3")).to eq '/catalog/test:3'
     end
   end
 
@@ -38,7 +38,7 @@ describe CatalogController do
         fq = "read_access_group_ssim:public OR edit_access_group_ssim:public OR discover_access_group_ssim:public"
         solr_opts = { fq: fq }
         response = ActiveFedora::SolrService.instance.conn.get('select', params: solr_opts)
-        @public_only_results = Blacklight::SolrResponse.new(response, solr_opts)
+        @public_only_results = Blacklight::Solr::Response.new(response, solr_opts)
       end
 
       it "should only return public documents if role does not have permissions" do
@@ -72,9 +72,9 @@ describe CatalogController do
         let(:related_uri) { related.rdf_subject }
         let(:asset) do
           ActiveFedora::Base.create do |g|
-            g.resource << [g.rdf_subject, RDF::DC.title, "Test Title"]
+            g.resource << [g.rdf_subject, RDF::Vocab::DC.title, "Test Title"]
             g.resource << [g.rdf_subject, RDF.type, type]
-            g.resource << [g.rdf_subject, RDF::DC.isReferencedBy, related_uri]
+            g.resource << [g.rdf_subject, RDF::Vocab::DC.isReferencedBy, related_uri]
           end
         end
         let(:related) do
